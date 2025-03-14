@@ -65,7 +65,7 @@ class BinaryStream(ReadOnlyBinaryStream):
         self.write('q', ctypes.c_int64(value).value)
 
     def writeSignedShort(self, value: int) -> None:
-        self.write('h', ctypes.c_uint16(value).value)
+        self.write('h', ctypes.c_int16(value).value)
 
     def writeUnsignedVarInt(self, uvalue: int) -> None:
         uvalue = ctypes.c_uint32(uvalue).value
