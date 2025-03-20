@@ -1,7 +1,7 @@
 import setuptools
 
 setuptools.setup(
-    name="binarystream",
+    name="mcbe-binarystream",
     version="1.0.0",
     author="GlacieTeam",
     description="BinaryStream",

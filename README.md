@@ -4,7 +4,7 @@ BinaryStream Library written in Python
 
 ## Install
 ```bash
-pip install binarystream
+pip install mcbe-binarystream
 ```
 
 ## Usage
