@@ -2,6 +2,11 @@
 BinaryStream Library written in Python  
 **A python version of [Binarystream](https://github.com/GlacieTeam/BinaryStream)**
 
+## Install
+```bash
+pip install binarystream
+```
+
 ## Usage
 ```Python
 stream = BinaryStream()
