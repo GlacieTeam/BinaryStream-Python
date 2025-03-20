@@ -1,61 +1,69 @@
 import typing
 import struct
 
-class ReadOnlyBinaryStream:
-    __mOwnedBuffer: bytearray | None
-    __mBufferView: bytearray
-    __mReadPointer: int
-    __mHasOverflowed: bool
 
-    def __init__(self, buffer: typing.ByteString = b"", copyBuffer: bool = False) -> None:
+class ReadOnlyBinaryStream:
+    mOwnedBuffer: bytearray | None
+    mBufferView: bytearray
+    mReadPointer: int
+    mHasOverflowed: bool
+
+    def __init__(
+        self, buffer: typing.ByteString = b"", copyBuffer: bool = False
+    ) -> None:
         if copyBuffer:
-            self.__mOwnedBuffer = bytearray(buffer)
-            self.__mBufferView = self.__mOwnedBuffer
+            self.mOwnedBuffer = bytearray(buffer)
+            self.mBufferView = self.mOwnedBuffer
         else:
-            self.__mOwnedBuffer = None
-            self.__mBufferView = buffer if isinstance(
-                buffer, bytearray) else bytearray(buffer)
-        self.__mReadPointer = 0
-        self.__mHasOverflowed = False
+            self.mOwnedBuffer = None
+            self.mBufferView = (
+                buffer if isinstance(buffer, bytearray) else bytearray(buffer)
+            )
+        self.mReadPointer = 0
+        self.mHasOverflowed = False
 
     def swapEndian(self, value: int, fmt: str) -> int:
         return struct.unpack(f">{fmt}", struct.pack(f"<{fmt}", value))[0]
 
-    def read(self, fmt: str, size: int, bigEndian: bool = False) -> typing.Optional[typing.Union[int, float]]:
-        if self.__mHasOverflowed:
+    def read(
+        self, fmt: str, size: int, bigEndian: bool = False
+    ) -> typing.Optional[typing.Union[int, float]]:
+        if self.mHasOverflowed:
             return None
-        if self.__mReadPointer + size > len(self.__mBufferView):
-            self.__mHasOverflowed = True
+        if self.mReadPointer + size > len(self.mBufferView):
+            self.mHasOverflowed = True
             return None
-        data: memoryview[int] = memoryview(self.__mBufferView)[
-            self.__mReadPointer:self.__mReadPointer+size]
-        self.__mReadPointer += size
+        data: memoryview[int] = memoryview(self.mBufferView)[
+            self.mReadPointer : self.mReadPointer + size
+        ]
+        self.mReadPointer += size
         endian: typing.Literal[">"] | typing.Literal["<"] = ">" if bigEndian else "<"
         try:
             value: typing.Union[int, float] = struct.unpack(
-                f"{endian}{fmt}", data.tobytes())[0]
+                f"{endian}{fmt}", data.tobytes()
+            )[0]
             return value
         except struct.error:
             return None
 
     def getPosition(self) -> int:
-        return self.__mReadPointer
+        return self.mReadPointer
 
     def getLeftBuffer(self) -> bytes:
-        return bytes(self.__mBufferView[self.__mReadPointer:])
+        return bytes(self.mBufferView[self.mReadPointer :])
 
     def isOverflowed(self) -> bool:
-        return self.__mHasOverflowed
+        return self.mHasOverflowed
 
     def hasDataLeft(self) -> bool:
-        return self.__mReadPointer < len(self.__mBufferView)
+        return self.mReadPointer < len(self.mBufferView)
 
     def getBytes(self, target: bytearray, num: int) -> bool:
-        if self.__mHasOverflowed or self.__mReadPointer + num > len(self.__mBufferView):
-            self.__mHasOverflowed = True
+        if self.mHasOverflowed or self.mReadPointer + num > len(self.mBufferView):
+            self.mHasOverflowed = True
             return False
-        target[:] = self.__mBufferView[self.__mReadPointer:self.__mReadPointer+num]
-        self.__mReadPointer += num
+        target[:] = self.mBufferView[self.mReadPointer : self.mReadPointer + num]
+        self.mReadPointer += num
         return True
 
     def getByte(self) -> int:
@@ -133,17 +141,19 @@ class ReadOnlyBinaryStream:
         length: int = self.getUnsignedVarInt()
         if length == 0:
             return ""
-        if self.__mReadPointer + length > len(self.__mBufferView):
-            self.__mHasOverflowed = True
+        if self.mReadPointer + length > len(self.mBufferView):
+            self.mHasOverflowed = True
             return ""
-        data: bytearray = self.__mBufferView[self.__mReadPointer:self.__mReadPointer+length]
-        self.__mReadPointer += length
+        data: bytearray = self.mBufferView[
+            self.mReadPointer : self.mReadPointer + length
+        ]
+        self.mReadPointer += length
         return data.decode("utf-8")
 
     def getUnsignedInt24(self) -> int:
-        if self.__mReadPointer + 3 > len(self.__mBufferView):
-            self.__mHasOverflowed = True
+        if self.mReadPointer + 3 > len(self.mBufferView):
+            self.mHasOverflowed = True
             return 0
-        data: bytearray = self.__mBufferView[self.__mReadPointer:self.__mReadPointer+3]
-        self.__mReadPointer += 3
+        data: bytearray = self.mBufferView[self.mReadPointer : self.mReadPointer + 3]
+        self.mReadPointer += 3
         return int.from_bytes(data, byteorder="little", signed=False)

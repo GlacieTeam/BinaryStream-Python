@@ -1,4 +1,4 @@
-from binarystream import BinaryStream, ReadOnlyBinaryStream
+from binarystream import *
 
 
 def test1() -> None:
@@ -24,11 +24,18 @@ def test1() -> None:
     stream.writeUnsignedInt24(18)
     hex: str = stream.getAndReleaseData().hex()
     print(f"hex: {hex}")
-    print(f"compare: {hex == "010203000400000005000000000000000100000000000018400000e0400800000009000000000000000a000b0c1a1cfeffffff0f00000010023137120000"}")
+    print(
+        f"compare: {hex == "010203000400000005000000000000000100000000000018400000e0400800000009000000000000000a000b0c1a1cfeffffff0f00000010023137120000"}"
+    )
+
 
 def test2() -> None:
-    stream = ReadOnlyBinaryStream(bytearray.fromhex("010203000400000005000000000000000100000000000018400000e0400800000009000000000000000a000b0c1a1cfeffffff0f00000010023137120000"))
-    
+    stream = ReadOnlyBinaryStream(
+        bytearray.fromhex(
+            "010203000400000005000000000000000100000000000018400000e0400800000009000000000000000a000b0c1a1cfeffffff0f00000010023137120000"
+        )
+    )
+
     byte: int = stream.getByte()
     print(f"byte: {byte} compare: {byte == 1}")
 
@@ -78,7 +85,9 @@ def test2() -> None:
     print(f"normalizedFloat: {normalizedFloat} compare: {normalizedFloat == 1.0}")
 
     signedBigEndianInt: int = stream.getSignedBigEndianInt()
-    print(f"signedBigEndianInt: {signedBigEndianInt} compare: {signedBigEndianInt == 16}")
+    print(
+        f"signedBigEndianInt: {signedBigEndianInt} compare: {signedBigEndianInt == 16}"
+    )
 
     string: str = stream.getString()
     print(f"string: {string} compare: {string == "17"}")
@@ -86,7 +95,8 @@ def test2() -> None:
     unsignedInt24: int = stream.getUnsignedInt24()
     print(f"unsignedInt24: {unsignedInt24} compare: {unsignedInt24 == 18}")
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     print("-" * 25, "Test1", "-" * 25)
     test1()
     print("-" * 25, "Test2", "-" * 25)

@@ -1,71 +1,73 @@
-from ReadOnlyBinaryStream import ReadOnlyBinaryStream
+from .ReadOnlyBinaryStream import ReadOnlyBinaryStream
 import typing
 import struct
 import ctypes
 
 
 class BinaryStream(ReadOnlyBinaryStream):
-    __mBuffer: bytearray
+    mBuffer: bytearray
 
     def __init__(self, buffer: typing.Optional[bytearray] = None) -> None:
         if buffer is None:
-            self.__mBuffer = bytearray()
+            self.mBuffer = bytearray()
         else:
-            self.__mBuffer = buffer
-        super().__init__(self.__mBuffer, copyBuffer=False)
+            self.mBuffer = buffer
+        super().__init__(self.mBuffer, copyBuffer=False)
 
     def setPosition(self, value: int) -> None:
         self.mReadPointer: int = value
 
     def reset(self) -> None:
-        self.__mBuffer.clear()
+        self.mBuffer.clear()
         self.mReadPointer = 0
         self.mHasOverflowed = False
 
     def getAndReleaseData(self) -> bytes:
-        data = bytes(self.__mBuffer)
+        data = bytes(self.mBuffer)
         self.reset()
         return data
 
-    def write(self, fmt: str, value: typing.Union[int, float], bigEndian: bool = False) -> None:
-        endian: typing.Literal['>'] | typing.Literal['<'] = '>' if bigEndian else '<'
-        self.__mBuffer.extend(struct.pack(f'{endian}{fmt}', value))
+    def write(
+        self, fmt: str, value: typing.Union[int, float], bigEndian: bool = False
+    ) -> None:
+        endian: typing.Literal[">"] | typing.Literal["<"] = ">" if bigEndian else "<"
+        self.mBuffer.extend(struct.pack(f"{endian}{fmt}", value))
 
     def writeBytes(self, origin: bytes, num: int) -> None:
-        self.__mBuffer.extend(origin[:num])
+        self.mBuffer.extend(origin[:num])
 
     def writeByte(self, value: int) -> None:
-        self.write('B', ctypes.c_uint8(value).value)
+        self.write("B", ctypes.c_uint8(value).value)
 
     def writeUnsignedChar(self, value: int) -> None:
         self.writeByte(ctypes.c_uint8(value).value)
 
     def writeUnsignedShort(self, value: int) -> None:
-        self.write('H', ctypes.c_uint16(value).value)
+        self.write("H", ctypes.c_uint16(value).value)
 
     def writeUnsignedInt(self, value: int) -> None:
-        self.write('I', ctypes.c_uint32(value).value)
+        self.write("I", ctypes.c_uint32(value).value)
 
     def writeUnsignedInt64(self, value: int) -> None:
-        self.write('Q', ctypes.c_uint64(value).value)
+        self.write("Q", ctypes.c_uint64(value).value)
 
     def writeBool(self, value: bool) -> None:
         self.writeByte(ctypes.c_bool(value).value)
 
     def writeDouble(self, value: float) -> None:
-        self.write('d', ctypes.c_double(value).value)
+        self.write("d", ctypes.c_double(value).value)
 
     def writeFloat(self, value: float) -> None:
-        self.write('f', ctypes.c_float(value).value)
+        self.write("f", ctypes.c_float(value).value)
 
     def writeSignedInt(self, value: int) -> None:
-        self.write('i', ctypes.c_int32(value).value)
+        self.write("i", ctypes.c_int32(value).value)
 
     def writeSignedInt64(self, value: int) -> None:
-        self.write('q', ctypes.c_int64(value).value)
+        self.write("q", ctypes.c_int64(value).value)
 
     def writeSignedShort(self, value: int) -> None:
-        self.write('h', ctypes.c_int16(value).value)
+        self.write("h", ctypes.c_int16(value).value)
 
     def writeUnsignedVarInt(self, uvalue: int) -> None:
         uvalue = ctypes.c_uint32(uvalue).value
@@ -110,13 +112,13 @@ class BinaryStream(ReadOnlyBinaryStream):
 
     def writeSignedBigEndianInt(self, value: int) -> None:
         value = ctypes.c_int32(value).value
-        self.write('i', value, bigEndian=True)
+        self.write("i", value, bigEndian=True)
 
     def writeString(self, value: str) -> None:
-        data: bytes = value.encode('utf-8')
+        data: bytes = value.encode("utf-8")
         self.writeUnsignedVarInt(len(data))
         self.writeBytes(data, len(data))
 
     def writeUnsignedInt24(self, value: int) -> None:
         value = ctypes.c_uint32(value).value
-        self.__mBuffer.extend(value.to_bytes(3, 'little'))
+        self.mBuffer.extend(value.to_bytes(3, "little"))
