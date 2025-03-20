@@ -9,6 +9,8 @@ pip install mcbe-binarystream
 
 ## Usage
 ```Python
+from binarystream import *
+
 stream = BinaryStream()
 stream.writeByte(1)
 stream.writeUnsignedChar(2)
