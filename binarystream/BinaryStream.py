@@ -1,5 +1,5 @@
 from .ReadOnlyBinaryStream import ReadOnlyBinaryStream
-import typing
+from typing import Union, Literal
 import struct
 import ctypes
 
@@ -7,12 +7,9 @@ import ctypes
 class BinaryStream(ReadOnlyBinaryStream):
     mBuffer: bytearray
 
-    def __init__(self, buffer: typing.Optional[bytearray] = None) -> None:
-        if buffer is None:
-            self.mBuffer = bytearray()
-        else:
-            self.mBuffer = buffer
-        super().__init__(self.mBuffer, copyBuffer=False)
+    def __init__(self, buffer: bytearray = bytearray()) -> None:
+        self.mBuffer = buffer
+        super().__init__(self.mBuffer)
 
     def setPosition(self, value: int) -> None:
         self.mReadPointer: int = value
@@ -28,9 +25,9 @@ class BinaryStream(ReadOnlyBinaryStream):
         return data
 
     def write(
-        self, fmt: str, value: typing.Union[int, float], bigEndian: bool = False
+        self, fmt: str, value: Union[int, float], bigEndian: bool = False
     ) -> None:
-        endian: typing.Literal[">"] | typing.Literal["<"] = ">" if bigEndian else "<"
+        endian: Literal[">"] | Literal["<"] = ">" if bigEndian else "<"
         self.mBuffer.extend(struct.pack(f"{endian}{fmt}", value))
 
     def writeBytes(self, origin: bytes, num: int) -> None:

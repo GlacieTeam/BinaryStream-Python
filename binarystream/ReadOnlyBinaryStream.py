@@ -1,24 +1,14 @@
-import typing
+from typing import Optional, Union, Literal, cast
 import struct
 
 
 class ReadOnlyBinaryStream:
-    mOwnedBuffer: bytearray | None
-    mBufferView: bytearray
+    mBufferView: bytes
     mReadPointer: int
     mHasOverflowed: bool
 
-    def __init__(
-        self, buffer: typing.ByteString = b"", copyBuffer: bool = False
-    ) -> None:
-        if copyBuffer:
-            self.mOwnedBuffer = bytearray(buffer)
-            self.mBufferView = self.mOwnedBuffer
-        else:
-            self.mOwnedBuffer = None
-            self.mBufferView = (
-                buffer if isinstance(buffer, bytearray) else bytearray(buffer)
-            )
+    def __init__(self, buffer: bytearray = bytearray()) -> None:
+        self.mBufferView = bytes(buffer)
         self.mReadPointer = 0
         self.mHasOverflowed = False
 
@@ -27,7 +17,7 @@ class ReadOnlyBinaryStream:
 
     def read(
         self, fmt: str, size: int, bigEndian: bool = False
-    ) -> typing.Optional[typing.Union[int, float]]:
+    ) -> Optional[Union[int, float]]:
         if self.mHasOverflowed:
             return None
         if self.mReadPointer + size > len(self.mBufferView):
@@ -37,11 +27,11 @@ class ReadOnlyBinaryStream:
             self.mReadPointer : self.mReadPointer + size
         ]
         self.mReadPointer += size
-        endian: typing.Literal[">"] | typing.Literal["<"] = ">" if bigEndian else "<"
+        endian: Literal[">"] | Literal["<"] = ">" if bigEndian else "<"
         try:
-            value: typing.Union[int, float] = struct.unpack(
-                f"{endian}{fmt}", data.tobytes()
-            )[0]
+            value: Union[int, float] = struct.unpack(f"{endian}{fmt}", data.tobytes())[
+                0
+            ]
             return value
         except struct.error:
             return None
@@ -67,19 +57,19 @@ class ReadOnlyBinaryStream:
         return True
 
     def getByte(self) -> int:
-        return typing.cast(int, self.read("B", 1)) or 0
+        return cast(int, self.read("B", 1)) or 0
 
     def getUnsignedChar(self) -> int:
         return self.getByte()
 
     def getUnsignedShort(self) -> int:
-        return typing.cast(int, self.read("H", 2)) or 0
+        return cast(int, self.read("H", 2)) or 0
 
     def getUnsignedInt(self) -> int:
-        return typing.cast(int, self.read("I", 4)) or 0
+        return cast(int, self.read("I", 4)) or 0
 
     def getUnsignedInt64(self) -> int:
-        return typing.cast(int, self.read("Q", 8)) or 0
+        return cast(int, self.read("Q", 8)) or 0
 
     def getBool(self) -> bool:
         return True if self.getByte() else False
@@ -91,13 +81,13 @@ class ReadOnlyBinaryStream:
         return self.read("f", 4) or 0.0
 
     def getSignedInt(self) -> int:
-        return typing.cast(int, self.read("i", 4)) or 0
+        return cast(int, self.read("i", 4)) or 0
 
     def getSignedInt64(self) -> int:
-        return typing.cast(int, self.read("q", 8)) or 0
+        return cast(int, self.read("q", 8)) or 0
 
     def getSignedShort(self) -> int:
-        return typing.cast(int, self.read("h", 2)) or 0
+        return cast(int, self.read("h", 2)) or 0
 
     def getUnsignedVarInt(self) -> int:
         value = 0
@@ -135,7 +125,7 @@ class ReadOnlyBinaryStream:
         return self.getVarInt64() / 2147483647.0
 
     def getSignedBigEndianInt(self) -> int:
-        return typing.cast(int, self.read("i", 4, bigEndian=True)) or 0
+        return cast(int, self.read("i", 4, bigEndian=True)) or 0
 
     def getString(self) -> str:
         length: int = self.getUnsignedVarInt()
