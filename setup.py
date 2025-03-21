@@ -2,7 +2,7 @@ import setuptools
 
 setuptools.setup(
     name="mcbe-binarystream",
-    version="1.0.0",
+    version="1.1.0",
     author="GlacieTeam",
     description="BinaryStream",
     long_description=open("README.md").read(),
