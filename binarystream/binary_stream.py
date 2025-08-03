@@ -1,57 +1,52 @@
 from .read_only_binary_stream import ReadOnlyBinaryStream
 from typing import Union, Literal
-from io import BytesIO
 import struct
 
 
 class BinaryStream(ReadOnlyBinaryStream):
-    _write_buffer: BytesIO
+    _buffer: bytearray
 
     def __init__(
-        self,
-        buffer: Union[bytearray, bytes, BytesIO] = bytearray(),
-        copy_buffer: bool = True,
+        self, buffer: Union[bytearray, bytes] = bytearray(), copy_buffer: bool = False
     ) -> None:
-        self._write_buffer = BytesIO()
+        if isinstance(buffer, bytes):
+            buffer = bytearray(buffer)
+        if copy_buffer:
+            self._buffer = bytearray(buffer)
+            self._owned_buffer = bytes(self._buffer)
+            self._buffer_view = self._owned_buffer
+        else:
+            self._buffer = buffer
+            self._owned_buffer = b""
+            self._buffer_view = bytes(self._buffer)
 
-        if isinstance(buffer, (bytes, bytearray)):
-            self._write_buffer.write(buffer)
-        elif isinstance(buffer, BytesIO):
-            self._write_buffer = buffer
-        super().__init__(self._write_buffer.getvalue(), copy_buffer=False)
+        super().__init__(self._buffer_view, copy_buffer=False)
         self._copy_buffer = copy_buffer
 
-    def _update_view(self) -> None:
-        self._buffer = self._write_buffer.getvalue()
+    def update_view(self) -> None:
         if self._copy_buffer:
             self._owned_buffer = bytes(self._buffer)
-            self._buffer = self._owned_buffer
+            self._buffer_view = self._owned_buffer
+        else:
+            self._buffer_view = bytes(self._buffer)
 
     def size(self) -> int:
-        return len(self._write_buffer.getvalue())
-
-    def reserve(self, size: int) -> None:
-        if size > self._write_buffer.getbuffer().nbytes:
-            self._write_buffer.getbuffer().release()
-            data = self._write_buffer.getvalue()
-            self._write_buffer = BytesIO()
-            self._write_buffer.write(data)
-            self._write_buffer.getbuffer().release()
+        return len(self._buffer)
 
     def reset(self) -> None:
-        self._write_buffer = BytesIO()
+        self._buffer.clear()
+        self.update_view()
         self._read_pointer = 0
         self._has_overflowed = False
-        self._update_view()
 
-    def data(self) -> bytes:
-        return self._write_buffer.getvalue()
+    def data(self) -> bytearray:
+        return self._buffer
 
     def copy_buffer(self) -> bytes:
-        return bytes(self._write_buffer.getvalue())
+        return bytes(self._buffer)
 
     def get_and_release_data(self) -> bytes:
-        data = self._write_buffer.getvalue()
+        data = bytes(self._buffer)
         self.reset()
         return data
 
@@ -60,12 +55,12 @@ class BinaryStream(ReadOnlyBinaryStream):
     ) -> None:
         endian: Literal[">"] | Literal["<"] = ">" if big_endian else "<"
         packed = struct.pack(f"{endian}{fmt}", value)
-        self._write_buffer.write(packed)
-        self._update_view()
+        self._buffer.extend(packed)
+        self.update_view()
 
     def write_bytes(self, origin: bytes, num: int) -> None:
-        self._write_buffer.write(origin[:num])
-        self._update_view()
+        self._buffer.extend(origin[:num])
+        self.update_view()
 
     def write_byte(self, value: int) -> None:
         self._write("B", value)
@@ -149,8 +144,8 @@ class BinaryStream(ReadOnlyBinaryStream):
         self.write_byte((value >> 16) & 0xFF)
 
     def write_raw_bytes(self, raw_buffer: bytes) -> None:
-        self._write_buffer.write(raw_buffer)
-        self._update_view()
+        self._buffer.extend(raw_buffer)
+        self.update_view()
 
     def write_stream(self, stream: ReadOnlyBinaryStream) -> None:
         self.write_raw_bytes(stream.get_left_buffer())

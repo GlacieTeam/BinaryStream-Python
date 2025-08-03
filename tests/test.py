@@ -2,7 +2,8 @@ from binarystream import *
 
 
 def test1() -> None:
-    stream = BinaryStream()
+    data = bytearray()
+    stream = BinaryStream(data)
     stream.write_byte(1)
     stream.write_unsigned_char(2)
     stream.write_unsigned_short(3)
@@ -22,7 +23,7 @@ def test1() -> None:
     stream.write_signed_big_endian_int(16)
     stream.write_string("17")
     stream.write_unsigned_int24(18)
-    hex: str = stream.get_and_release_data().hex()
+    hex: str = data.hex()
     print(f"hex: {hex}")
     print(
         f"compare: {hex == "010203000400000005000000000000000100000000000018400000e0400800000009000000000000000a000b0c1a1cfeffffff0f00000010023137120000"}"

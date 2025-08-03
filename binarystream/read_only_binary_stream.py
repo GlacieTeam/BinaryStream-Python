@@ -1,29 +1,24 @@
-import struct
 from typing import Optional, Union, Literal, cast
-from io import BytesIO
+import struct
 
 
 class ReadOnlyBinaryStream:
     _owned_buffer: bytes
-    _buffer: bytes
+    _buffer_view: bytes
     _read_pointer: int
     _has_overflowed: bool
 
     def __init__(
-        self, buffer: Union[bytes, bytearray, BytesIO] = b"", copy_buffer: bool = True
+        self, buffer: Union[bytes, bytearray], copy_buffer: bool = False
     ) -> None:
-        if isinstance(buffer, BytesIO):
-            buffer = buffer.getvalue()
-
         if isinstance(buffer, bytearray):
             buffer = bytes(buffer)
-
         if copy_buffer:
             self._owned_buffer = bytes(buffer)
-            self._buffer = self._owned_buffer
+            self._buffer_view = self._owned_buffer
         else:
             self._owned_buffer = b""
-            self._buffer = buffer
+            self._buffer_view = buffer
 
         self._read_pointer = 0
         self._has_overflowed = False
@@ -34,11 +29,11 @@ class ReadOnlyBinaryStream:
     def _read_bytes(self, size: int) -> Optional[bytes]:
         if self._has_overflowed:
             return None
-        if self._read_pointer + size > len(self._buffer):
+        if self._read_pointer + size > len(self._buffer_view):
             self._has_overflowed = True
             return None
 
-        data = self._buffer[self._read_pointer : self._read_pointer + size]
+        data = self._buffer_view[self._read_pointer : self._read_pointer + size]
         self._read_pointer += size
         return data
 
@@ -56,14 +51,22 @@ class ReadOnlyBinaryStream:
         except struct.error:
             return None
 
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, ReadOnlyBinaryStream):
+            return False
+        return (
+            self._buffer_view == other._buffer_view
+            and self._read_pointer == other._read_pointer
+        )
+
     def size(self) -> int:
-        return len(self._buffer)
+        return len(self._buffer_view)
 
     def get_position(self) -> int:
         return self._read_pointer
 
     def set_position(self, value: int) -> None:
-        if value > len(self._buffer):
+        if value > len(self._buffer_view):
             self._has_overflowed = True
         self._read_pointer = value
 
@@ -75,26 +78,26 @@ class ReadOnlyBinaryStream:
         self.set_position(self._read_pointer + length)
 
     def get_left_buffer(self) -> bytes:
-        return self._buffer[self._read_pointer :]
+        return self._buffer_view[self._read_pointer :]
 
     def view(self) -> bytes:
-        return self._buffer
+        return self._buffer_view
 
     def copy_data(self) -> bytes:
-        return bytes(self._buffer)
+        return bytes(self._buffer_view)
 
     def is_overflowed(self) -> bool:
         return self._has_overflowed
 
     def has_data_left(self) -> bool:
-        return self._read_pointer < len(self._buffer)
+        return self._read_pointer < len(self._buffer_view)
 
     def get_bytes(self, target: bytearray, num: int) -> bool:
-        if self._has_overflowed or self._read_pointer + num > len(self._buffer):
+        if self._has_overflowed or self._read_pointer + num > len(self._buffer_view):
             self._has_overflowed = True
             return False
 
-        target[:num] = self._buffer[self._read_pointer : self._read_pointer + num]
+        target[:num] = self._buffer_view[self._read_pointer : self._read_pointer + num]
         self._read_pointer += num
         return True
 
@@ -184,11 +187,11 @@ class ReadOnlyBinaryStream:
         if length == 0:
             return ""
 
-        if self._read_pointer + length > len(self._buffer):
+        if self._read_pointer + length > len(self._buffer_view):
             self._has_overflowed = True
             return ""
 
-        data = self._buffer[self._read_pointer : self._read_pointer + length]
+        data = self._buffer_view[self._read_pointer : self._read_pointer + length]
         self._read_pointer += length
         try:
             return data.decode("utf-8")
@@ -196,11 +199,11 @@ class ReadOnlyBinaryStream:
             return ""
 
     def get_unsigned_int24(self) -> int:
-        if self._read_pointer + 3 > len(self._buffer):
+        if self._read_pointer + 3 > len(self._buffer_view):
             self._has_overflowed = True
             return 0
 
-        data = self._buffer[self._read_pointer : self._read_pointer + 3]
+        data = self._buffer_view[self._read_pointer : self._read_pointer + 3]
         self._read_pointer += 3
         return int.from_bytes(data, byteorder="little", signed=False)
 
@@ -208,17 +211,10 @@ class ReadOnlyBinaryStream:
         if length == 0:
             return b""
 
-        if self._read_pointer + length > len(self._buffer):
+        if self._read_pointer + length > len(self._buffer_view):
             self._has_overflowed = True
             return b""
 
-        data = self._buffer[self._read_pointer : self._read_pointer + length]
+        data = self._buffer_view[self._read_pointer : self._read_pointer + length]
         self._read_pointer += length
         return data
-
-    def __eq__(self, other: object) -> bool:
-        if not isinstance(other, ReadOnlyBinaryStream):
-            return False
-        return (
-            self._buffer == other._buffer and self._read_pointer == other._read_pointer
-        )
