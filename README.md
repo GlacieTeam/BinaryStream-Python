@@ -34,7 +34,15 @@ stream.write_unsigned_int24(18)
 ```
 
 ## License
-- Please note that this project is licensed under the LGPLv3.
-- If you modify or distribute this project, you must comply with the requirements of the LGPLv3 license, including but not limited to providing the complete source code and retaining the copyright notices. For more detailed information, please visit the GNU Official Website.
+This project is licensed under the **Mozilla Public License 2.0 (MPL-2.0)**.  
+
+### Key Requirements:
+- **Modifications to this project's files** must be released under MPL-2.0.  
+- **Using this library in closed-source projects** is allowed (no requirement to disclose your own code).  
+- **Patent protection** is explicitly granted to all users.  
+
+For the full license text, see [LICENSE](LICENSE) file or visit [MPL 2.0 Official Page](https://www.mozilla.org/en-US/MPL/2.0/).  
+
+---
 
 ### Copyright © 2025 GlacieTeam. All rights reserved.
