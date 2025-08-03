@@ -9,7 +9,7 @@ import setuptools
 
 setuptools.setup(
     name="mcbe-binarystream",
-    version="1.1.0",
+    version="2.0.0",
     author="GlacieTeam",
     description="BinaryStream",
     long_description=open("README.md").read(),
@@ -18,9 +18,9 @@ setuptools.setup(
     packages=setuptools.find_packages(),
     classifiers=[
         "Programming Language :: Python :: 3",
-        "License :: OSI Approved :: GNU Lesser General Public License v3 (LGPLv3)",
+        "License :: OSI Approved :: Mozilla Public License 2.0 (MPL-2.0)",
         "Operating System :: OS Independent",
     ],
-    license="LGPLv3",
+    license="MPL-2.0",
     python_requires=">=3",
 )
