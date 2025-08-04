@@ -5,7 +5,7 @@
 #
 # SPDX-License-Identifier: MPL-2.0
 
-from .read_only_binary_stream import ReadOnlyBinaryStream
+from binarystream.read_only_binary_stream import ReadOnlyBinaryStream
 from typing import Union, Literal
 import struct
 

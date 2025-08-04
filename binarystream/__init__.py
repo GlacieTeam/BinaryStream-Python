@@ -5,7 +5,10 @@
 #
 # SPDX-License-Identifier: MPL-2.0
 
-from .binary_stream import BinaryStream
-from .read_only_binary_stream import ReadOnlyBinaryStream
+from binarystream.read_only_binary_stream import ReadOnlyBinaryStream
+from binarystream.binary_stream import BinaryStream
 
-__all__ = ["BinaryStream", "ReadOnlyBinaryStream"]
+__all__ = [
+    ReadOnlyBinaryStream,
+    BinaryStream,
+]
