@@ -8,7 +8,4 @@
 from binarystream.read_only_binary_stream import ReadOnlyBinaryStream
 from binarystream.binary_stream import BinaryStream
 
-__all__ = [
-    ReadOnlyBinaryStream,
-    BinaryStream,
-]
+__all__ = ["ReadOnlyBinaryStream", "BinaryStream"]
