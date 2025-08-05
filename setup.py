@@ -9,9 +9,9 @@ import setuptools
 
 setuptools.setup(
     name="mcbe-binarystream",
-    version="2.0.1",
+    version="2.1.0",
     author="GlacieTeam",
-    description="BinaryStream",
+    description="Minecraft BinaryStream Library written in Python",
     long_description=open("README.md").read(),
     long_description_content_type="text/markdown",
     url="https://github.com/GlacieTeam/BinaryStream-Python",

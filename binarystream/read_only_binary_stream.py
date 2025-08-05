@@ -41,9 +41,6 @@ class ReadOnlyBinaryStream:
         self._read_pointer = 0
         self._has_overflowed = False
 
-    def _swap_endian(self, value: int, fmt: str) -> int:
-        return struct.unpack(f">{fmt}", struct.pack(f"<{fmt}", value))[0]
-
     def _read_bytes(self, size: int) -> Optional[bytes]:
         if self._has_overflowed:
             return None
@@ -150,23 +147,6 @@ class ReadOnlyBinaryStream:
             True if there is more data to read
         """
         return self._read_pointer < len(self._buffer_view)
-
-    def get_bytes(self, target: bytearray, num: int) -> bool:
-        """Reads raw bytes into a target buffer.
-
-        Args:
-            target: The buffer to fill with read bytes
-            num: Number of bytes to read
-
-        Returns:
-            True if bytes were successfully read
-        """
-        if self._has_overflowed or self._read_pointer + num > len(self._buffer_view):
-            self._has_overflowed = True
-            return False
-        target[:num] = self._buffer_view[self._read_pointer : self._read_pointer + num]
-        self._read_pointer += num
-        return True
 
     def get_byte(self) -> int:
         """Reads a single byte from the stream.
@@ -361,40 +341,6 @@ class ReadOnlyBinaryStream:
         value = self._read("i", 4, big_endian=True)
         return cast(int, value) if value is not None else 0
 
-    def get_string(self) -> str:
-        """Reads a UTF-8 encoded string.
-
-        The string is prefixed with its length as a varint.
-
-        Returns:
-            The decoded UTF-8 string
-        """
-        length = self.get_unsigned_varint()
-        if length == 0:
-            return ""
-        if self._read_pointer + length > len(self._buffer_view):
-            self._has_overflowed = True
-            return ""
-        data = self._buffer_view[self._read_pointer : self._read_pointer + length]
-        self._read_pointer += length
-        try:
-            return data.decode("utf-8")
-        except UnicodeDecodeError:
-            return ""
-
-    def get_unsigned_int24(self) -> int:
-        """Reads a 24-bit unsigned integer (3 bytes, little-endian).
-
-        Returns:
-            The 24-bit unsigned integer value
-        """
-        if self._read_pointer + 3 > len(self._buffer_view):
-            self._has_overflowed = True
-            return 0
-        data = self._buffer_view[self._read_pointer : self._read_pointer + 3]
-        self._read_pointer += 3
-        return int.from_bytes(data, byteorder="little", signed=False)
-
     def get_raw_bytes(self, length: int) -> bytes:
         """Reads raw bytes from the stream.
 
@@ -412,3 +358,39 @@ class ReadOnlyBinaryStream:
         data = self._buffer_view[self._read_pointer : self._read_pointer + length]
         self._read_pointer += length
         return data
+
+    def get_bytes(self) -> bytes:
+        """Reads a raw bytes.
+
+        Returns:
+            The raw bytes value
+        """
+        length = self.get_unsigned_varint()
+        return self.get_raw_bytes(length)
+
+    def get_string(self) -> str:
+        """Reads a UTF-8 encoded string.
+
+        The string is prefixed with its length as a varint.
+
+        Returns:
+            The decoded UTF-8 string
+        """
+        data = self.get_bytes()
+        try:
+            return data.decode("utf-8")
+        except UnicodeDecodeError:
+            return ""
+
+    def get_unsigned_int24(self) -> int:
+        """Reads a 24-bit unsigned integer (3 bytes, little-endian).
+
+        Returns:
+            The 24-bit unsigned integer value
+        """
+        if self._read_pointer + 3 > len(self._buffer_view):
+            self._has_overflowed = True
+            return 0
+        data = self._buffer_view[self._read_pointer : self._read_pointer + 3]
+        self._read_pointer += 3
+        return int.from_bytes(data, byteorder="little", signed=False)

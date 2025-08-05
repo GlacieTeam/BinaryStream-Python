@@ -98,16 +98,6 @@ class BinaryStream(ReadOnlyBinaryStream):
         self.reset()
         return data
 
-    def write_bytes(self, origin: bytes, num: int) -> None:
-        """Writes raw bytes to the stream.
-
-        Args:
-            origin: Byte data to write
-            num: Number of bytes to write
-        """
-        self._buffer.extend(origin[:num])
-        self._update_view()
-
     def write_byte(self, value: int) -> None:
         """Writes a single byte to the stream.
 
@@ -292,6 +282,24 @@ class BinaryStream(ReadOnlyBinaryStream):
         """
         self._write("i", value, big_endian=True)
 
+    def write_raw_bytes(self, raw_buffer: bytes) -> None:
+        """Writes raw bytes to the stream.
+
+        Args:
+            raw_buffer: Byte data to write
+        """
+        self._buffer.extend(raw_buffer)
+        self._update_view()
+
+    def write_bytes(self, value: bytes) -> None:
+        """Writes raw bytes.
+
+        Args:
+            raw_buffer: Byte data to write
+        """
+        self.write_unsigned_varint(len(value))
+        self.write_raw_bytes(value)
+
     def write_string(self, value: str) -> None:
         """Writes a UTF-8 string.
 
@@ -299,8 +307,7 @@ class BinaryStream(ReadOnlyBinaryStream):
             value: String to write
         """
         data = value.encode("utf-8")
-        self.write_unsigned_varint(len(data))
-        self.write_bytes(data, len(data))
+        self.write_bytes(data)
 
     def write_unsigned_int24(self, value: int) -> None:
         """Writes a 24-bit unsigned integer (3 bytes, little-endian).
@@ -311,15 +318,6 @@ class BinaryStream(ReadOnlyBinaryStream):
         self.write_byte(value & 0xFF)
         self.write_byte((value >> 8) & 0xFF)
         self.write_byte((value >> 16) & 0xFF)
-
-    def write_raw_bytes(self, raw_buffer: bytes) -> None:
-        """Writes raw bytes to the stream.
-
-        Args:
-            raw_buffer: Byte data to write
-        """
-        self._buffer.extend(raw_buffer)
-        self._update_view()
 
     def write_stream(self, stream: ReadOnlyBinaryStream) -> None:
         """Writes all remaining data from another stream.
